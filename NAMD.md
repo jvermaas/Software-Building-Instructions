@@ -56,6 +56,7 @@ ln -s ../charm .
 git checkout release-2-14
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.5.9-linux-ppc64le-threaded.tar.gz
 tar xzf tcl8.5.9-linux-ppc64le-threaded.tar.gz
+mv tcl8.5.9-linux-ppc64le-threaded tcl-threaded
 ./config Linux-POWER-g++.summit214 --charm-arch pamilrts-linux-ppc64le-smp --with-fftw3 --with-cuda --cuda-prefix $CUDA_PREFIX
 cd Linux-POWER-g++.summit214
 make -j8
