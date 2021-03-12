@@ -34,6 +34,34 @@ make -j8
 #A namd2 executable now should be in this directory.
 ```
 
+## NAMD on slurm-based clusters
+
+You'll probably want a multinode executable. On my cluster, which uses infiniband and so UCX is the preferred backend, these are the steps.
+
+```bash
+#Get modules, or otherwise pick up CUDA and FFTW.
+module load gompi/2020a CUDA FFTW3
+#get your NAMD source again. This time from gitlab so we can also get NAMD3
+git clone https://gitlab.com/tcbgUIUC/namd.git
+
+cd namd
+#Get the charm++ source
+git clone https://github.com/UIUC-PPL/charm.git
+cd charm
+git checkout v6.10.2
+#Build charm++
+./build charm++ ucx-linux-x86_64   smp  -j16  --with-production
+cd ..
+#Checkout the namd3.0 alpha (devel branch)
+git checkout release-3-0-alpha-9
+#Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
+./config Linux-x86_64-g++ --charm-arch ucx-linux-x86_64-smp --with-fftw3 --with-cuda --with-single-node-cuda
+cd Linux-x86_64-g++
+#Build NAMD
+make -j8
+#You should now have a namd3 executable.
+```
+
 ## NAMD on Summit
 
 On Summit, you likely want a multi-node executable, and everything is POWER9 instead of x86. There are also CUDA and fftw libraries to consider, which changes the build process a little.
