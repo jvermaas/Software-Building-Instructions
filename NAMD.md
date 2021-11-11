@@ -40,7 +40,7 @@ You'll probably want a multinode executable. On my cluster, which uses infiniban
 
 ```bash
 #Get modules, or otherwise pick up CUDA and FFTW.
-module load gompi/2020a CUDA FFTW3
+module load gompi/2021a CUDA/10.1.105 FFTW/3.3.9
 #get your NAMD source again. This time from gitlab so we can also get NAMD3
 git clone https://gitlab.com/tcbgUIUC/namd.git
 
@@ -120,3 +120,34 @@ jsrun -n12 -r6 -g1 -c7 --launch_distribution packed -b packed:7 $NAMD_PATH/namd3
 ```
 
 The arguments for NAMD3 are a bit of an artform in and of themselves. Without the pemap, charm++ makes some unwise choices of what processors to bind. `+ppn 6` vs `+ppn 7` (or `+ppn 1` for namd3) is also a question worth testing. Adding specific communication threads with `+commap` arguments is also something to experiment with. A common example would be `+commap 0,28,56,88,116,144`.
+
+
+## NAMD on Perlmutter
+
+```bash
+#Default modules are fine. We'll get FFTW and Tcl from UIUC.
+module load nersc-easybuild/21.10
+module load OpenMPI/4.0.5-gcccuda-2020b
+module load FFTW
+module unload nvidia/21.7
+module unload PrgEnv-nvidia/8.2.0
+#get your NAMD source again. This time from gitlab so we can also get NAMD3
+git clone https://gitlab.com/tcbgUIUC/namd.git
+cd namd
+#Get the charm++ source
+git clone https://github.com/UIUC-PPL/charm.git
+cd charm
+git checkout v6.10.2
+./build charm++ ucx-linux-x86_64   smp slurmpmi -j16  --with-production
+cd ..
+tar xzf tcl8.5.9-linux-x86_64-threaded.tar.gz
+mv tcl8.5.9-linux-x86_64-threaded tcl-threaded
+#Checkout the namd3.0 alpha (devel branch)
+git checkout release-3-0-alpha-9
+#Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
+./config Linux-x86_64-g++.ucx --charm-arch ucx-linux-x86_64-slurmpmi-smp --with-cuda --with-single-node-cuda --with-fftw3
+cd Linux-x86_64-g++.ucx
+#Build NAMD
+make -j8
+#You should now have a namd3 executable.
+```
