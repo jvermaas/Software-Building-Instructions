@@ -15,3 +15,25 @@ cmake .. -DGMX_BUILD_OWN_FFTW=ON -DGMX_GPU=CUDA -DCMAKE_INSTALL_PREFIX=/global/h
 make -j8
 make -j8 install
 ```
+Example on my local cluster
+```bash
+module load CUDA/11.4.2
+module load gompi/2021b
+module load FFTW
+module load Python/3.9.6
+module load cmake
+wget https://ftp.gromacs.org/gromacs/gromacs-2022.tar.gz
+tar -zxf gromacs-2022.tar.gz 
+cd gromacs-2022/
+mkdir build
+cd build
+cmake .. -DGMX_GPU=CUDA -DGMX_FFT_LIBRARY=fftw3 -DCMAKE_INSTALL_PREFIX=/mnt/home/vermaasj/gromacs/2022
+make -j 8
+make install
+
+cd ..
+mkdir buildmpi
+cmake .. -DGMX_GPU=CUDA -DGMX_FFT_LIBRARY=fftw3 -DCMAKE_INSTALL_PREFIX=/mnt/home/vermaasj/gromacs/2022 -DGMX_MPI=ON
+make -j 8
+make install
+```
