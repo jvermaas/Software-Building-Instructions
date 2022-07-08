@@ -62,6 +62,27 @@ make -j8
 #You should now have a namd3 executable.
 ```
 
+## NAMD on Delta
+
+```bash
+module load cuda fftw
+wget https://www.ks.uiuc.edu/Research/namd/2.14/download/946183/NAMD_2.14_Source.tar.gz
+tar -zxf NAMD_2.14_Source.tar.gz 
+cd NAMD_2.14_Source
+tar -xf charm-6.10.2.tar
+cd charm-6.10.2
+./build charm++ ucx-linux-x86_64   smp  -j16  --with-production
+cd ..
+wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.5.9-linux-x86_64-threaded.tar.gz
+tar xzf tcl8.5.9-linux-x86_64-threaded.tar.gz
+mv tcl8.5.9-linux-x86_64-threaded tcl-threaded
+./config Linux-x86_64-g++ --charm-arch ucx-linux-x86_64-smp --with-fftw3 --with-cuda
+cd Linux-x86_64-g++
+#Build NAMD
+make -j8
+#Now you'd have a namd2 executable.
+```
+
 ## NAMD on Summit
 
 On Summit, you likely want a multi-node executable, and everything is POWER9 instead of x86. There are also CUDA and fftw libraries to consider, which changes the build process a little.
