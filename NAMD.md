@@ -65,22 +65,28 @@ make -j8
 ## NAMD on Delta
 
 ```bash
-module load cuda fftw
-wget https://www.ks.uiuc.edu/Research/namd/2.14/download/946183/NAMD_2.14_Source.tar.gz
-tar -zxf NAMD_2.14_Source.tar.gz 
-cd NAMD_2.14_Source
-tar -xf charm-6.10.2.tar
-cd charm-6.10.2
-./build charm++ ucx-linux-x86_64   smp  -j16  --with-production
+module load modtree/gpu
+module load gcc/11.2.0
+module load cuda/11.6.1
+module load openmpi/4.1.2
+module load ucx/1.11.2
+module load fftw/3.3.10
+
+wget https://www.ks.uiuc.edu/Research/namd/3.0b5/download/019723/NAMD_3.0b5_Source.tar.gz
+tar -zxf NAMD_3.0b5_Source.tar.gz 
+cd NAMD_3.0b5_Source
+tar -xf charm-7.0.0.tar
+cd charm-v7.0.0
+./build charm++ ucx-linux-x86_64 smp slurmpmi2 --with-production -j8
 cd ..
-wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.5.9-linux-x86_64-threaded.tar.gz
-tar xzf tcl8.5.9-linux-x86_64-threaded.tar.gz
-mv tcl8.5.9-linux-x86_64-threaded tcl-threaded
-./config Linux-x86_64-g++ --charm-arch ucx-linux-x86_64-smp --with-fftw3 --with-cuda
+wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz .
+tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
+#Edit the arch/Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
+./config Linux-x86_64-g++ --charm-arch ucx-linux-x86_64-smp-slurmpmi2 --with-cuda --with-single-node-cuda --with-fftw3
 cd Linux-x86_64-g++
 #Build NAMD
 make -j8
-#Now you'd have a namd2 executable.
+#Now you'd have a namd3 executable.
 ```
 
 ## NAMD on Summit
