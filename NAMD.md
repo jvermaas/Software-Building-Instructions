@@ -89,6 +89,33 @@ make -j8
 #Now you'd have a namd3 executable.
 ```
 
+## NAMD on Frontier
+
+```bash
+#Multiple programming environments are available. First one I got to make sense was cray.
+module load PrgEnv-cray/8.4.0
+module load amd-mixed/5.7.0
+module load cce/16.0.1
+module load craype/2.7.23
+module load cray-fftw
+git clone git@gitlab.com:tcbgUIUC/namd.git
+cd namd
+git checkout devel
+git clone https://github.com/UIUC-PPL/charm
+cd charm
+#CC and cc call the cray compilers.
+env MPICXX=CC MPICC=cc ./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
+cd ../arch
+cp Linux-x86_64-g++.arch Linux-x86_64-clang++.arch
+#edit the created file to use craycxx and craycc instead of g++ and gcc.
+
+cd ..
+./config Linux-x86_64-clang++.mpi --charm-base ./charm --charm-arch mpi-linux-x86_64-smp --with-hip --rocm-prefix $ROCM_PATH --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-hip
+cd Linux-x86_64-clang++.mpi
+make -j8
+```
+
+
 ## NAMD on Summit
 
 On Summit, you likely want a multi-node executable, and everything is POWER9 instead of x86. There are also CUDA and fftw libraries to consider, which changes the build process a little.
