@@ -40,7 +40,7 @@ You'll probably want a multinode executable. On my cluster, which uses infiniban
 
 ```bash
 #Get modules, or otherwise pick up CUDA and FFTW.
-module load gompi/2021a CUDA/10.1.105 FFTW/3.3.9
+module load gompi/2022b CUDA/12.0.0 FFTW/3.3.10
 #get your NAMD source again. This time from gitlab so we can also get NAMD3
 git clone https://gitlab.com/tcbgUIUC/namd.git
 
@@ -48,12 +48,11 @@ cd namd
 #Get the charm++ source
 git clone https://github.com/UIUC-PPL/charm.git
 cd charm
-git checkout v6.10.2
 #Build charm++
 ./build charm++ ucx-linux-x86_64   smp  -j16  --with-production
 cd ..
 #Checkout the namd3.0 alpha (devel branch)
-git checkout release-3-0-alpha-9
+git checkout devel
 #Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
 ./config Linux-x86_64-g++ --charm-arch ucx-linux-x86_64-smp --with-fftw3 --with-cuda --with-single-node-cuda
 cd Linux-x86_64-g++
