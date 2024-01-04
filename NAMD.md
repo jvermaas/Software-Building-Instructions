@@ -108,7 +108,8 @@ env MPICXX=CC MPICC=cc ./buildold charm++ mpi-linux-x86_64 smp --with-production
 cd ../arch
 cp Linux-x86_64-g++.arch Linux-x86_64-clang++.arch
 #edit the created file to use craycxx and craycc instead of g++ and gcc.
-
+#Remove -Xptxas from Make.depends, since the cray compilers don't have that option.
+sed -i 's/-Xptxas//g` Make.depends
 cd ..
 ./config Linux-x86_64-clang++.mpi --charm-base ./charm --charm-arch mpi-linux-x86_64-smp --with-hip --rocm-prefix $ROCM_PATH --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-hip
 cd Linux-x86_64-clang++.mpi
