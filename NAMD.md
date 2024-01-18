@@ -184,28 +184,27 @@ The arguments for NAMD3 are a bit of an artform in and of themselves. Without th
 
 ```bash
 #Default modules are fine. We'll get FFTW and Tcl from UIUC.
-module load nersc-easybuild/21.10
-module load OpenMPI/4.0.5-gcccuda-2020b
-module load FFTW
-module unload nvidia/21.7
-module unload PrgEnv-nvidia/8.2.0
+module load PrgEnv-gnu
+module load cray-fftw
 #get your NAMD source again. This time from gitlab so we can also get NAMD3
 git clone https://gitlab.com/tcbgUIUC/namd.git
 cd namd
 #Get the charm++ source
 git clone https://github.com/UIUC-PPL/charm.git
 cd charm
-git checkout v6.10.2
-./build charm++ ucx-linux-x86_64   smp slurmpmi -j16  --with-production
+./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
 cd ..
-tar xzf tcl8.5.9-linux-x86_64-threaded.tar.gz
-mv tcl8.5.9-linux-x86_64-threaded tcl-threaded
-#Checkout the namd3.0 alpha (devel branch)
-git checkout release-3-0-alpha-9
+wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
+tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
+#Checkout the namd3.0 (devel branch)
+git checkout devel
+#For whatever reason, the build system isn't finding the NVHPCSDK directory as being set. So we set it.
+export NVHPCSDK_DIR=/opt/nvidia/hpc_sdk/Linux_x86_64/23.9
 #Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
-./config Linux-x86_64-g++.ucx --charm-arch ucx-linux-x86_64-slurmpmi-smp --with-cuda --with-single-node-cuda --with-fftw3
-cd Linux-x86_64-g++.ucx
+#Note that we also need to monkey around in the config script so that we can set cuda-prefix in a cray environment.
+./config Linux-x86_64-g++.mpi --charm-base ./charm --charm-arch mpi-linux-x86_64-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda --cuda-prefix $NVHPCSDK_DIR
 #Build NAMD
+cd Linux-x86_64-g++.mpi
 make -j8
 #You should now have a namd3 executable.
 ```
