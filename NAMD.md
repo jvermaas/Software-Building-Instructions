@@ -64,19 +64,19 @@ make -j8
 ## NAMD on Delta
 
 ```bash
-module load modtree/gpu
-module load gcc/11.2.0
-module load cuda/11.6.1
-module load openmpi/4.1.2
-module load ucx/1.11.2
-module load fftw/3.3.10
+module load PrgEnv-gnu
+module load craype-x86-milan
+module load cray-fftw
+module load cray-pmi
 
-wget https://www.ks.uiuc.edu/Research/namd/3.0b5/download/019723/NAMD_3.0b5_Source.tar.gz
-tar -zxf NAMD_3.0b5_Source.tar.gz 
-cd NAMD_3.0b5_Source
-tar -xf charm-7.0.0.tar
-cd charm-v7.0.0
-./build charm++ ucx-linux-x86_64 smp slurmpmi2 --with-production -j8
+#get your NAMD source again. This time from gitlab so we can also get NAMD3
+git clone git@gitlab.com:tcbgUIUC/namd.git
+cd namd
+git checkout devel
+#Get the charm++ source
+git clone https://github.com/UIUC-PPL/charm.git
+cd charm
+./build charm++ ofi-crayshasta --with-production -j8
 cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz .
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
@@ -183,16 +183,17 @@ The arguments for NAMD3 are a bit of an artform in and of themselves. Without th
 ## NAMD on Perlmutter
 
 ```bash
-#Default modules are fine. We'll get FFTW and Tcl from UIUC.
+#Modules to use GNU for programming
 module load PrgEnv-gnu
 module load cray-fftw
+module load cray-pmi
 #get your NAMD source again. This time from gitlab so we can also get NAMD3
 git clone https://gitlab.com/tcbgUIUC/namd.git
 cd namd
 #Get the charm++ source
-git clone https://github.com/UIUC-PPL/charm.git
+git clone git@gitlab.com:tcbgUIUC/namd.git
 cd charm
-./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
+./build charm++ ofi-crayshasta --with-production -j8
 cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
@@ -202,9 +203,9 @@ git checkout devel
 export NVHPCSDK_DIR=/opt/nvidia/hpc_sdk/Linux_x86_64/23.9
 #Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
 #Note that we also need to monkey around in the config script so that we can set cuda-prefix in a cray environment.
-./config Linux-x86_64-g++.mpi --charm-base ./charm --charm-arch mpi-linux-x86_64-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda --cuda-prefix $NVHPCSDK_DIR
+./config Linux-x86_64-g++.crayshasta --charm-base ./charm --charm-arch ofi-crayshasta-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda --cuda-prefix $NVHPCSDK_DIR
 #Build NAMD
-cd Linux-x86_64-g++.mpi
+cd Linux-x86_64-g++.crayshasta
 make -j8
 #You should now have a namd3 executable.
 ```
