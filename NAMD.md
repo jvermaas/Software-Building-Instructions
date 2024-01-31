@@ -76,7 +76,7 @@ git checkout devel
 #Get the charm++ source
 git clone https://github.com/UIUC-PPL/charm.git
 cd charm
-./build charm++ ofi-crayshasta --with-production -j8
+./build charm++ ofi-crayshasta --with-production -j8 --incdir=/opt/cray/libfabric/1.15.2.0/include --libdir=/opt/cray/libfabric/1.15.2.0/lib64/
 cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz .
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
@@ -193,7 +193,7 @@ cd namd
 #Get the charm++ source
 git clone git@gitlab.com:tcbgUIUC/namd.git
 cd charm
-./build charm++ ofi-crayshasta --with-production -j8
+./build charm++ ofi-crayshasta --with-production -j8 --incdir=/opt/cray/libfabric/1.15.2.0/include --libdir=/opt/cray/libfabric/1.15.2.0/lib64/
 cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
