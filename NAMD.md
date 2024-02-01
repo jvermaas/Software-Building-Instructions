@@ -76,13 +76,13 @@ git checkout devel
 #Get the charm++ source
 git clone https://github.com/UIUC-PPL/charm.git
 cd charm
-./build charm++ ofi-crayshasta --with-production -j8 --incdir=/opt/cray/libfabric/1.15.2.0/include --libdir=/opt/cray/libfabric/1.15.2.0/lib64/
+./build charm++ ofi-crayshasta smp --with-production -j8 --incdir=/opt/cray/libfabric/1.15.2.0/include --libdir=/opt/cray/libfabric/1.15.2.0/lib64/
 cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz .
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
 #Edit the arch/Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
-./config Linux-x86_64-g++ --charm-arch ucx-linux-x86_64-smp-slurmpmi2 --with-cuda --with-single-node-cuda --with-fftw3
-cd Linux-x86_64-g++
+./config Linux-x86_64-g++.crayshasta --charm-base ./charm --charm-arch ofi-crayshasta-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
+cd Linux-x86_64-g++.crayshasta
 #Build NAMD
 make -j8
 #Now you'd have a namd3 executable.
@@ -193,7 +193,7 @@ cd namd
 #Get the charm++ source
 git clone git@gitlab.com:tcbgUIUC/namd.git
 cd charm
-./build charm++ ofi-crayshasta --with-production -j8 --incdir=/opt/cray/libfabric/1.15.2.0/include --libdir=/opt/cray/libfabric/1.15.2.0/lib64/
+./build charm++ ofi-crayshasta smp --with-production -j8 --incdir=/opt/cray/libfabric/1.15.2.0/include --libdir=/opt/cray/libfabric/1.15.2.0/lib64/
 cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
