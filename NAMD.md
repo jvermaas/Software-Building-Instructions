@@ -61,33 +61,6 @@ make -j8
 #You should now have a namd3 executable.
 ```
 
-## NAMD on Delta
-
-```bash
-module load PrgEnv-gnu
-module load craype-x86-milan
-module load cray-fftw
-module load cray-pmi
-
-#get your NAMD source again. This time from gitlab so we can also get NAMD3
-git clone git@gitlab.com:tcbgUIUC/namd.git
-cd namd
-git checkout devel
-#Get the charm++ source
-git clone https://github.com/UIUC-PPL/charm.git
-cd charm
-./build charm++ ofi-crayshasta smp --with-production -j8 --incdir=/opt/cray/libfabric/1.15.2.0/include --libdir=/opt/cray/libfabric/1.15.2.0/lib64/
-cd ..
-wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz .
-tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
-#Edit the arch/Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
-./config Linux-x86_64-g++.crayshasta --charm-base ./charm --charm-arch ofi-crayshasta-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
-cd Linux-x86_64-g++.crayshasta
-#Build NAMD
-make -j8
-#Now you'd have a namd3 executable.
-```
-
 ## NAMD on Frontier
 
 ```bash
@@ -119,6 +92,102 @@ cd Linux-x86_64-clang++.mpi
 make -j8
 ```
 
+
+
+## NAMD on Perlmutter
+
+```bash
+#Modules to use GNU for programming
+module load PrgEnv-cray
+module load cray-fftw
+module load cray-pmi
+#get your NAMD source again. wget is fine
+wget https://www.ks.uiuc.edu/Research/namd/3.0b6/...
+tar -zxf NAMD_3.0b6_Source.tar.gz
+cd NAMD_3.0b6_Source
+tar -xf charm-7.0.0.tar
+cd charm-v7.0.0
+#CC and cc are cray compilers, which are based on clang.
+env MPICXX=CC MPICC=cc ./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
+cd ..
+wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
+tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
+
+#For whatever reason, the build system isn't finding the NVHPCSDK directory as being set. So we set it.
+export NVHPCSDK_DIR=/opt/nvidia/hpc_sdk/Linux_x86_64/23.9
+cd ../arch
+cp Linux-x86_64-g++.arch Linux-x86_64-clang++.arch
+#edit the created file to use craycxx and craycc instead of g++ and gcc.
+#Edit the arch/Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
+#edit Linux-x86_64.cuda to ask for -lcufft_static_nocallback instead of -lcufft_static. This avoids a linking error.
+cd ..
+#Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
+./config Linux-x86_64-clang++.mpi --charm-base ./charm-v7.0.0 --charm-arch mpi-linux-x86_64-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
+#Build NAMD
+cd Linux-x86_64-clang++.mpi
+make -j8
+#You should now have a namd3 executable.
+```
+Note that Perlmutter has SMT turned on, so you should allocate as though there are 128 cores per GPU node (32 cores per GPU). This is an example submission script that is meant for replica exchange umbrella sampling:
+
+```
+#!/bin/bash
+#SBATCH -A m3968_g
+#SBATCH -C gpu
+#SBATCH -J test
+#SBATCH -o %x-%j.out
+#SBATCH -t 0:10:00
+#SBATCH -N 32
+#SBATCH --gpus-per-node=4
+#SBATCH --gpu-bind=single:1
+#SBATCH -c 32
+#SBATCH -n 128
+
+module reset
+
+#cd $MEMBERWORK/bip251/stmv
+cd $SLURM_SUBMIT_DIR
+module load PrgEnv-cray
+module load cray-fftw
+module load cray-pmi
+NAMDDIR=/global/homes/j/jvermaas/NAMD_3.0b6_Source/Linux-x86_64-clang++.mpi
+srun $NAMDDIR/namd3 +ppn 31 +ignoresharing +replicas 128 runtestSOA.namd +stdout runtestSOA-%d.log
+
+```
+
+## NAMD on Delta
+
+This is really similar to Perlmutter and Frontier. They all currently use Slingshot 11, which means we need to use MPI to get reasonable performance. Note that Delta has SMT turned off, so there are only 64 cores per GPU node.
+```bash
+module load PrgEnv-cray
+module load craype-x86-milan
+module load cray-fftw
+module load cray-pmi
+
+#get your NAMD source again.
+wget https://www.ks.uiuc.edu/Research/namd/3.0b6/...
+tar -zxf NAMD_3.0b6_Source.tar.gz
+cd NAMD_3.0b6_Source
+tar -xf charm-7.0.0.tar
+cd charm-v7.0.0
+#CC and cc are cray compilers, which are based on clang.
+env MPICXX=CC MPICC=cc ./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
+cd ..
+wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
+tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
+cd arch
+cp Linux-x86_64-g++.arch Linux-x86_64-clang++.arch
+#edit the created file to use CC and cc instead of g++ and gcc.
+#Edit the Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
+cd ..
+./config Linux-x86_64-g++.crayshasta --charm-base ./charm --charm-arch ofi-crayshasta-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
+cd Linux-x86_64-g++.crayshasta
+#Build NAMD
+make -j8
+#Now you'd have a namd3 executable.
+```
+
+May need to do the following to resolve some goofy packages: `LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/cray/pe/lib64:/opt/cray/pe/fftw/3.3.10.5/x86_milan/lib`
 
 ## NAMD on Summit
 
@@ -179,37 +248,3 @@ jsrun -n12 -r6 -g1 -c7 --launch_distribution packed -b packed:7 $NAMD_PATH/namd3
 
 The arguments for NAMD3 are a bit of an artform in and of themselves. Without the pemap, charm++ makes some unwise choices of what processors to bind. `+ppn 6` vs `+ppn 7` (or `+ppn 1` for namd3) is also a question worth testing. Adding specific communication threads with `+commap` arguments is also something to experiment with. A common example would be `+commap 0,28,56,88,116,144`.
 
-
-## NAMD on Perlmutter
-
-```bash
-#Modules to use GNU for programming
-module load PrgEnv-cray
-module load cray-fftw
-module load cray-pmi
-#get your NAMD source again. wget is fine
-wget https://www.ks.uiuc.edu/Research/namd/3.0b6/...
-tar -zxf NAMD_3.0b6_Source.tar.gz
-cd NAMD_3.0b6_Source
-tar -xf charm-7.0.0.tar
-cd charm-v7.0.0
-#CC and cc are cray compilers, which are based on clang.
-env MPICXX=CC MPICC=cc ./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
-cd ..
-wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
-tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
-
-#For whatever reason, the build system isn't finding the NVHPCSDK directory as being set. So we set it.
-export NVHPCSDK_DIR=/opt/nvidia/hpc_sdk/Linux_x86_64/23.9
-cd ../arch
-cp Linux-x86_64-g++.arch Linux-x86_64-clang++.arch
-#edit the created file to use craycxx and craycc instead of g++ and gcc.
-#Edit the arch/Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
-cd ..
-#Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
-./config Linux-x86_64-clang++.mpi --charm-base ./charm-v7.0.0 --charm-arch mpi-linux-x86_64-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
-#Build NAMD
-cd Linux-x86_64-clang++.mpi
-make -j8
-#You should now have a namd3 executable.
-```
