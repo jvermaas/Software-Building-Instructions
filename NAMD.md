@@ -184,28 +184,32 @@ The arguments for NAMD3 are a bit of an artform in and of themselves. Without th
 
 ```bash
 #Modules to use GNU for programming
-module load PrgEnv-gnu
+module load PrgEnv-cray
 module load cray-fftw
 module load cray-pmi
-#get your NAMD source again. This time from gitlab so we can also get NAMD3
-git clone https://gitlab.com/tcbgUIUC/namd.git
-cd namd
-#Get the charm++ source
-git clone git@gitlab.com:tcbgUIUC/namd.git
-cd charm
-./build charm++ ofi-crayshasta smp --with-production -j8 --incdir=/opt/cray/libfabric/1.15.2.0/include --libdir=/opt/cray/libfabric/1.15.2.0/lib64/
+#get your NAMD source again. wget is fine
+wget https://www.ks.uiuc.edu/Research/namd/3.0b6/...
+tar -zxf NAMD_3.0b6_Source.tar.gz
+cd NAMD_3.0b6_Source
+tar -xf charm-7.0.0.tar
+cd charm-v7.0.0
+#CC and cc are cray compilers, which are based on clang.
+env MPICXX=CC MPICC=cc ./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
 cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
-#Checkout the namd3.0 (devel branch)
-git checkout devel
+
 #For whatever reason, the build system isn't finding the NVHPCSDK directory as being set. So we set it.
 export NVHPCSDK_DIR=/opt/nvidia/hpc_sdk/Linux_x86_64/23.9
+cd ../arch
+cp Linux-x86_64-g++.arch Linux-x86_64-clang++.arch
+#edit the created file to use craycxx and craycc instead of g++ and gcc.
+#Edit the arch/Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
+cd ..
 #Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
-#Note that we also need to monkey around in the config script so that we can set cuda-prefix in a cray environment.
-./config Linux-x86_64-g++.crayshasta --charm-base ./charm --charm-arch ofi-crayshasta-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda --cuda-prefix $NVHPCSDK_DIR
+./config Linux-x86_64-clang++.mpi --charm-base ./charm-v7.0.0 --charm-arch mpi-linux-x86_64-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
 #Build NAMD
-cd Linux-x86_64-g++.crayshasta
+cd Linux-x86_64-clang++.mpi
 make -j8
 #You should now have a namd3 executable.
 ```
