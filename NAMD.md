@@ -61,6 +61,14 @@ make -j8
 #You should now have a namd3 executable.
 ```
 
+## NAMD on GraceHopper
+
+The big difference here is that the performance is trash unless you are very specific about your CUDA linking and gencode options.
+
+```bash
+./config Linux-ARM64-g++ --charm-arch multicore-linux-arm8 --with-single-node-cuda --with-cuda --with-fftw3 --cuda-gencode arch=compute_90,code=sm_90 --cuda-dlink arch=compute_90,code=sm_90
+```
+
 ## NAMD on Frontier
 
 ```bash
