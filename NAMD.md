@@ -40,7 +40,7 @@ You'll probably want a multinode executable. On my cluster, which uses infiniban
 
 ```bash
 #Get modules, or otherwise pick up CUDA and FFTW.
-module load gompi/2022b CUDA/12.0.0 FFTW/3.3.10
+module load gompi/2023a CUDA/12.3.0 FFTW/3.3.10-GCC-12.3.0
 #get your NAMD source again. This time from gitlab so we can also get NAMD3
 git clone https://gitlab.com/tcbgUIUC/namd.git
 
