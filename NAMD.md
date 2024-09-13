@@ -127,7 +127,7 @@ module load cray-fftw
 module load cray-pmi
 #get your NAMD source again. wget is fine
 wget https://www.ks.uiuc.edu/Research/namd/3.0b6/...
-tar -zxf NAMD_3.0b_Source.tar.gz
+tar -zxf NAMD_3.0_Source.tar.gz
 cd NAMD_3.0_Source
 tar -xf charm-8.0.0.tar
 cd charm-8.0.0
