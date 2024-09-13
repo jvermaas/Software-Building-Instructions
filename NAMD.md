@@ -34,6 +34,22 @@ make -j8
 #A namd2 executable now should be in this directory.
 ```
 
+## NAMD3 on Ubuntu 24.04 with CUDA
+
+```bash
+sudo apt 
+tar -zxf NAMD_3.0_Source.tar.gz
+cd NAMD_3.0_Source
+tar -xf charm-8.0.0.tar
+cd charm-8.0.0
+./build charm++ multicore-linux-x86_64 --with-production -j8
+cd ..
+#Edit arch/Linux-x86_64.tcl to have TCLINCL=-I/usr/include/tcl8.6. You should also have fftw3 installed (libfftw3-dev)
+./config Linux-x86_64-g++ --charm-arch multicore-linux-x86_64 --with-fftw3 --with-cuda --with-single-node-cuda
+cd Linux-x86_64-g++/
+make -j8
+```
+
 ## NAMD on slurm-based clusters
 
 You'll probably want a multinode executable. On my cluster, which uses infiniband and so UCX is the preferred backend, these are the steps.
@@ -111,10 +127,12 @@ module load cray-fftw
 module load cray-pmi
 #get your NAMD source again. wget is fine
 wget https://www.ks.uiuc.edu/Research/namd/3.0b6/...
-tar -zxf NAMD_3.0b6_Source.tar.gz
-cd NAMD_3.0b6_Source
-tar -xf charm-7.0.0.tar
-cd charm-v7.0.0
+tar -zxf NAMD_3.0b_Source.tar.gz
+cd NAMD_3.0_Source
+tar -xf charm-8.0.0.tar
+cd charm-8.0.0
+./build charm++ ofi-crayshasta --with-production -j8
+cd ..
 #CC and cc are cray compilers, which are based on clang.
 env MPICXX=CC MPICC=cc ./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
 cd ..
@@ -122,8 +140,8 @@ wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threa
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
 
 #For whatever reason, the build system isn't finding the NVHPCSDK directory as being set. So we set it.
-export NVHPCSDK_DIR=/opt/nvidia/hpc_sdk/Linux_x86_64/23.9
-cd ../arch
+#export NVHPCSDK_DIR=/opt/nvidia/hpc_sdk/Linux_x86_64/23.9
+cd arch
 cp Linux-x86_64-g++.arch Linux-x86_64-clang++.arch
 #edit the created file to use craycxx and craycc instead of g++ and gcc.
 #Edit the arch/Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
