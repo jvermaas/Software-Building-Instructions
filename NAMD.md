@@ -122,7 +122,7 @@ make -j8
 
 ```bash
 #Modules to use GNU for programming
-module load PrgEnv-cray
+module load PrgEnv-gnu
 module load cray-fftw
 module load cray-pmi
 #get your NAMD source again. wget is fine
@@ -133,24 +133,20 @@ tar -xf charm-8.0.0.tar
 cd charm-8.0.0
 ./build charm++ ofi-crayshasta --with-production -j8
 cd ..
-#CC and cc are cray compilers, which are based on clang.
-env MPICXX=CC MPICC=cc ./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
-cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
 
 #For whatever reason, the build system isn't finding the NVHPCSDK directory as being set. So we set it.
 #export NVHPCSDK_DIR=/opt/nvidia/hpc_sdk/Linux_x86_64/23.9
 cd arch
-cp Linux-x86_64-g++.arch Linux-x86_64-clang++.arch
 #edit the created file to use craycxx and craycc instead of g++ and gcc.
 #Edit the arch/Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
 #edit Linux-x86_64.cuda to ask for -lcufft_static_nocallback instead of -lcufft_static. This avoids a linking error.
 cd ..
 #Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
-./config Linux-x86_64-clang++.mpi --charm-base ./charm-v7.0.0 --charm-arch mpi-linux-x86_64-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
+./config Linux-x86_64-g++ --charm-base ./charm-8.0.0 --charm-arch ofi-crayshasta-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
 #Build NAMD
-cd Linux-x86_64-clang++.mpi
+cd Linux-x86_64-g++
 make -j8
 #You should now have a namd3 executable.
 ```
