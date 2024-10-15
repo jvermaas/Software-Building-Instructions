@@ -131,7 +131,7 @@ tar -zxf NAMD_3.0_Source.tar.gz
 cd NAMD_3.0_Source
 tar -xf charm-8.0.0.tar
 cd charm-8.0.0
-./build charm++ ofi-crayshasta --with-production -j8
+./build charm++ ofi-crayshasta smp --with-production -j8
 cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
@@ -180,29 +180,29 @@ srun $NAMDDIR/namd3 +ppn 31 +ignoresharing +replicas 128 runtestSOA.namd +stdout
 
 This is really similar to Perlmutter and Frontier. They all currently use Slingshot 11, which means we need to use MPI to get reasonable performance. Note that Delta has SMT turned off, so there are only 64 cores per GPU node.
 ```bash
-module load PrgEnv-cray
+module load PrgEnv-gnu
 module load craype-x86-milan
 module load cray-fftw
 module load cray-pmi
+module load cuda/12.3.0
 
 #get your NAMD source again.
+#get your NAMD source again. wget is fine
 wget https://www.ks.uiuc.edu/Research/namd/3.0b6/...
-tar -zxf NAMD_3.0b6_Source.tar.gz
-cd NAMD_3.0b6_Source
-tar -xf charm-7.0.0.tar
-cd charm-v7.0.0
-#CC and cc are cray compilers, which are based on clang.
-env MPICXX=CC MPICC=cc ./buildold charm++ mpi-linux-x86_64 smp --with-production -j8
+tar -zxf NAMD_3.0_Source.tar.gz
+cd NAMD_3.0_Source
+tar -xf charm-8.0.0.tar
+cd charm-8.0.0
+#The incdir is because the libfabric module doesn't set an include directory. This looks to be repeated alot...
+./build charm++ ofi-linux-x86_64 cxi smp slurmpmi2cray --with-production -j8 --incdir=/opt/cray/libfabric/1.15.2.0/include --libdir=/opt/cray/libfabric/1.15.2.0/lib64 --incdir=/opt/cray/pe/pmi/6.1.13/include --libdir=/opt/cray/pe/pmi/6.1.13/lib
 cd ..
 wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
 tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
 cd arch
-cp Linux-x86_64-g++.arch Linux-x86_64-clang++.arch
-#edit the created file to use CC and cc instead of g++ and gcc.
 #Edit the Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
 cd ..
-./config Linux-x86_64-g++.crayshasta --charm-base ./charm --charm-arch ofi-crayshasta-smp --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
-cd Linux-x86_64-g++.crayshasta
+./config Linux-x86_64-g++.cray --charm-base ./charm-8.0.0 --charm-arch ofi-linux-x86_64-smp-cxi-slurmpmi2cray --with-cuda --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-cuda
+cd Linux-x86_64-g++.cray
 #Build NAMD
 make -j8
 #Now you'd have a namd3 executable.
