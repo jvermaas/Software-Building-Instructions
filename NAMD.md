@@ -88,6 +88,32 @@ The big difference here is that the performance is trash unless you are very spe
 ## NAMD on Frontier
 
 ```bash
+module load cray-fftw
+module load rocm
+module load craype-accel-amd-gfx90a
+module load PrgEnv-gnu-amd/8.5.0
+
+
+git clone git@gitlab.com:tcbgUIUC/namd.git
+cd namd
+#At the time of writing, you want commit 5b1cc71e130dce36dc54b3ee4e3b1c736196661a, rather than the head, since David broke something in PME.
+git checkout main
+git clone https://github.com/UIUC-PPL/charm
+./build charm++ ofi-crayshasta smp --with-production -j8
+cd ..
+wget http://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
+tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
+#Edit the arch/Linux-x86_64.tcl file to point to the right place. By default it points to a non-existent file
+
+./config Linux-x86_64-g++.crayshasta --charm-base ./charm --charm-arch ofi-crayshasta-smp --with-hip --rocm-prefix $ROCM_PATH --with-fftw3 --fftw-prefix $FFTW_ROOT --with-single-node-hip
+ cd Linux-x86_64-g++.crayshasta/
+make -j8
+#Now we have a namd3 executable.
+```
+
+
+Old instructions on which I based the new instructions.
+```bash
 #Multiple programming environments are available. First one I got to make sense was cray.
 module load PrgEnv-cray/8.4.0
 module load amd-mixed/5.7.0
