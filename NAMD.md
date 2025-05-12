@@ -96,7 +96,6 @@ module load PrgEnv-gnu-amd/8.5.0
 
 git clone git@gitlab.com:tcbgUIUC/namd.git
 cd namd
-#At the time of writing, you want commit 5b1cc71e130dce36dc54b3ee4e3b1c736196661a, rather than the head, since David broke something in PME.
 git checkout main
 git clone https://github.com/UIUC-PPL/charm
 ./build charm++ ofi-crayshasta smp --with-production -j8
