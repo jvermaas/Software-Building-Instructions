@@ -57,24 +57,34 @@ You'll probably want a multinode executable. On my cluster, which uses infiniban
 ```bash
 #Get modules, or otherwise pick up CUDA and FFTW.
 module load gompi/2023a CUDA/12.3.0 FFTW/3.3.10-GCC-12.3.0
-#get your NAMD source again. This time from gitlab so we can also get NAMD3
-git clone https://gitlab.com/tcbgUIUC/namd.git
+#get your NAMD source again. This time from gitlab so we can also get NAMD3. Pin a release tag (release-3-0-3 as of Nov 2026) rather than devel.
+git clone --branch release-3-0-3 git@gitlab.com:tcbgUIUC/namd.git
 
 cd namd
-#Get the charm++ source
-git clone https://github.com/UIUC-PPL/charm.git
-cd charm
+#Get the charm++ source. NAMD 3.0.x expects charm++ 8.0.0 (see CHARM_VERSION in ./config)
+git clone --depth 1 --branch v8.0.0 https://github.com/UIUC-PPL/charm.git charm-8.0.0
+cd charm-8.0.0
 #Build charm++
 ./build charm++ ucx-linux-x86_64   smp  -j16  --with-production
 cd ..
-#Checkout the namd3.0 alpha (devel branch)
-git checkout devel
+#Tcl (the default path in arch/Linux-x86_64.tcl doesn't exist outside Illinois, so use --tcl-prefix below)
+wget https://www.ks.uiuc.edu/Research/namd/libraries/tcl8.6.13-linux-x86_64-threaded.tar.gz
+tar -zxf tcl8.6.13-linux-x86_64-threaded.tar.gz
 #Config line is important! Without the with-single-node-cuda, you won't have CUDASOAIntegrate
-./config Linux-x86_64-g++ --charm-arch ucx-linux-x86_64-smp --with-fftw3 --with-cuda --with-single-node-cuda
+#List the GPU architectures you want explicitly (here V100, A100, L40S, H200). Repeat --cuda-dlink for each, too.
+./config Linux-x86_64-g++ --charm-base ./charm-8.0.0 --charm-arch ucx-linux-x86_64-smp \
+  --with-fftw3 --fftw-prefix $EBROOTFFTW --tcl-prefix $PWD/tcl8.6.13-linux-x86_64-threaded \
+  --with-cuda --with-single-node-cuda --cuda-prefix $EBROOTCUDA \
+  --cuda-gencode arch=compute_70,code=sm_70 --cuda-gencode arch=compute_80,code=sm_80 \
+  --cuda-gencode arch=compute_89,code=sm_89 --cuda-gencode arch=compute_90,code=sm_90 \
+  --cuda-gencode arch=compute_90,code=compute_90 \
+  --cuda-dlink arch=compute_70,code=sm_70 --cuda-dlink arch=compute_80,code=sm_80 \
+  --cuda-dlink arch=compute_89,code=sm_89 --cuda-dlink arch=compute_90,code=sm_90 \
+  --cuda-dlink arch=compute_90,code=compute_90
 cd Linux-x86_64-g++
 #Build NAMD
 make -j8
-#You should now have a namd3 executable.
+#You should now have a namd3 executable. UCX builds need to be launched with srun (a bare ./namd3 aborts with a UCX/PMI error).
 ```
 
 ## NAMD on GraceHopper
